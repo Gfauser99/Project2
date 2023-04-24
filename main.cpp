@@ -17,7 +17,7 @@ int Game = 1;
 
 
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
-char last_command[2] = "";
+char last_command[4] = "";
 char msg[]="";
 int main() {
 
@@ -117,6 +117,21 @@ void printEmptyBoard(){
             }
         }
         printf("%s\t%s\t%s\n", cards[49], cards[50], cards[51]); // Change the last line to print the last 3 elements
+    }
+
+    if (strcmp(last_command, "SI") == 0) {
+        char pile1[26][MAX_CARD_LENGTH], pile2[26][MAX_CARD_LENGTH];
+        for (int i=0;i<26;i++){
+        strcpy(pile1[i], cards[i]);
+        strcpy(pile2[i],cards[i+26]);
+      //  printf("%s ",pile1[i]);
+      //  printf("%s\n",pile2[i]);
+        }
+       for (int i =0;i<26;i++){
+           strcpy( cards[2*i],pile1[i]);
+           strcpy( cards[(2*i)+1],pile2[i]);
+       }
+
     }
 
 
