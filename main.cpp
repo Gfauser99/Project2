@@ -73,7 +73,8 @@ int main() {
 
 
 void printEmptyBoard(){
-
+    int j = 1;
+    int k = 0;
         //Print top of cards always
     printf("C1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
 
@@ -82,6 +83,15 @@ void printEmptyBoard(){
     }
 
     if (strcmp(last_command,"LD")==0){
+        for (int i = 1; i < 9; i++) {
+            if (i % 2 != 0) {
+                printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
+                j++;}
+            if (i%2 == 0 && i < 8) {
+                printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
+            }
+        }
+        printf("%s\t%s\t%s\n", cards[49], cards[50], cards[51]);
         printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF1\n"
                "[]\t[]\t[]\t[]\t[]\t[]\t[]\n"
                "[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF2\n"
@@ -94,8 +104,7 @@ void printEmptyBoard(){
     }
 
     if (strcmp(last_command, "SW") == 0) {
-        int j = 1;
-        int k = 0; // Change k to 0 to start from the first index
+        // Change k to 0 to start from the first index
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t\t[]\tF%d\n", cards[k], cards[k+1], cards[k+2], cards[k+3], cards[k+4], cards[k+5], cards[k+6], j);
