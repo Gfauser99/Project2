@@ -36,7 +36,7 @@ AH
 10H
 JH
 QH
-KQ
+KH
 AS
 2S
 3S
