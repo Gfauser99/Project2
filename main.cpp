@@ -10,6 +10,7 @@ int printEmptyBoard();
 void printLoadedBoard();
 int loadFile(char[]);
 void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH]);
+int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]);
 bool game = true;
 bool loaded = false;
 char ok[3] = "OK";
@@ -87,7 +88,7 @@ int printEmptyBoard(){
     char msg[30]="";
     int j = 1;
     int k = 0;
-        //Print top of cards always
+        //Always print top columns
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
 
 
@@ -130,14 +131,14 @@ int printEmptyBoard(){
     if (strcmp(last_command, "SI") == 0) {
         if (!loaded){
             strcpy(msg,"Error - no file loaded yet");}
-        else {char pile1[26][MAX_CARD_LENGTH], pile2[26][MAX_CARD_LENGTH];
+        else {char pile1[MAX_CARDS/2][MAX_CARD_LENGTH], pile2[MAX_CARDS/2][MAX_CARD_LENGTH];
         for (int i=0;i<26;i++){
         strcpy(pile1[i], cards[i]);
         strcpy(pile2[i],cards[i+26]);
       //  printf("%s ",pile1[i]);
       //  printf("%s\n",pile2[i]);
         }
-       for (int i =0;i<26;i++){
+       for (int i =0;i<MAX_CARDS/2;i++){
            strcpy( cards[2*i],pile1[i]);
            strcpy( cards[(2*i)+1],pile2[i]);
        }
@@ -170,6 +171,23 @@ int printEmptyBoard(){
             printf("[]\t[]\t[]\n");
             strcpy(msg,ok);
     }
+    }
+    if (strcmp(last_command, "SD") == 0) {
+        if (!loaded){
+            strcpy(msg,"Error - no file loaded yet");}
+        else {
+            for (int i = 1; i < 9; i++) {
+                if (i % 2 != 0) {
+                    printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
+                    j++;}
+                if (i%2 == 0 && i < 8) {
+                    printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
+                }
+            }
+            printf("[]\t[]\t[]\n");
+            saveDeck(cards, "test.txt");
+            strcpy(msg,ok);
+        }
     }
 
 
@@ -217,10 +235,9 @@ void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MA
         strcpy(shuffled_cards[i], cards[i]);
     }
 
-    // Seed the random number generator
-    //rand(time(NULL));
 
-    // Fisher-Yates shuffle algorithm
+
+   // Fisher-yates shuffle style from online example
     for (int i = MAX_CARDS - 1; i > 0; i--) {
         int random_index = rand() % (i + 1);
 
@@ -233,4 +250,20 @@ void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MA
     for (int i = 0;i < MAX_CARDS; i++){
         strcpy(cards[i],shuffled_cards[i]);
     }
+}
+
+int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]){
+FILE *file = fopen(filename, "w");
+if (file == NULL) {
+printf("Error opening file.\n");
+return 1;
+}
+
+for (int i = 0; i < MAX_CARDS; i++) {
+fprintf(file, "%s\n", cards[i]);
+}
+
+fclose(file);
+
+return 0;
 }
