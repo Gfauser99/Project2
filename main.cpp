@@ -16,7 +16,11 @@ bool loaded = false;
 char ok[3] = "OK";
 
 
-
+/** TODO IN PREPARE PHASE:
+ *          1. Accept optional input in LD, SI and SD.
+ *          2. If no optional input - load basic file OR create array
+ *          3. Validate file content before loading.
+ */
 
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
 char last_command[3] = "";
