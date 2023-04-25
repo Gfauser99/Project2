@@ -6,10 +6,10 @@
 
 #define MAX_CARDS 52
 #define MAX_CARD_LENGTH 5
-void printEmptyBoard();
+int printEmptyBoard();
 void printLoadedBoard();
 int loadFile(char[]);
-int Game = 1;
+bool game = true;
 bool loaded = false;
 
 
@@ -50,9 +50,14 @@ int main() {
    // printf("%s",cards[51]);
   //  int result = strcmp(test123,cards[51]);
    // printf("%d\n",result);
-    while(1) {
-        printEmptyBoard();
+    printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
+    printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
+    printf("LAST COMMAND:\nMessage:\nINPUT > ");
+    while(game) {
         scanf("%s",last_command);
+        printEmptyBoard();
+
+
 
     }
 
@@ -72,7 +77,11 @@ int main() {
 
 
 
-void printEmptyBoard(){
+int printEmptyBoard(){
+    if (strcmp(last_command, "QQ") == 0) {
+        game=false;
+        return 0;
+    }
     char msg[30]="";
     int j = 1;
     int k = 0;
@@ -116,7 +125,7 @@ void printEmptyBoard(){
     if (strcmp(last_command, "SI") == 0) {
         if (!loaded){
             strcpy(msg,"Error - no file loaded yet");}
-        char pile1[26][MAX_CARD_LENGTH], pile2[26][MAX_CARD_LENGTH];
+        else {char pile1[26][MAX_CARD_LENGTH], pile2[26][MAX_CARD_LENGTH];
         for (int i=0;i<26;i++){
         strcpy(pile1[i], cards[i]);
         strcpy(pile2[i],cards[i+26]);
@@ -127,16 +136,27 @@ void printEmptyBoard(){
            strcpy( cards[2*i],pile1[i]);
            strcpy( cards[(2*i)+1],pile2[i]);
        }
+        for (int i = 1; i < 9; i++) {
+            if (i % 2 != 0) {
+                printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
+                j++;}
+            if (i%2 == 0 && i < 8) {
+                printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
+            }
+        }
+        printf("[]\t[]\t[]\n");
 
-    }
+    }}
+
 
     if (strcmp(last_command,"")==0 || strcmp(msg,"")!=0){
-        printf("\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t[]\tF4\n");
+        printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     }
 
     printf("\nLAST COMMAND: %s \nMessage: %s\nINPUT >", last_command,msg);
 
 
+return 0;
 
 }
 
