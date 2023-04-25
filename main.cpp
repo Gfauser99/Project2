@@ -9,6 +9,7 @@
 int printEmptyBoard();
 void printLoadedBoard();
 int loadFile(char[]);
+void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH]);
 bool game = true;
 bool loaded = false;
 char ok[3] = "OK";
@@ -78,6 +79,7 @@ int main() {
 
 
 int printEmptyBoard(){
+
     if (strcmp(last_command, "QQ") == 0) {
         game=false;
         return 0;
@@ -151,10 +153,30 @@ int printEmptyBoard(){
         strcpy(msg,ok);
     }}
 
+    if (strcmp(last_command, "SR") == 0) {
+        if (!loaded){
+            strcpy(msg,"Error - no file loaded yet");}
+        else {
+        char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH];
+        shuffleCards(cards, shuffled_cards);
+            for (int i = 1; i < 9; i++) {
+                if (i % 2 != 0) {
+                    printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
+                    j++;}
+                if (i%2 == 0 && i < 8) {
+                    printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
+                }
+            }
+            printf("[]\t[]\t[]\n");
+            strcpy(msg,ok);
+    }
+    }
 
-    if (strcmp(last_command,"")==0 || strcmp(msg,"")!=0){
+
+    if (strcmp(last_command,"")==0 || strcmp(msg,ok)!=0){
         printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     }
+
 
     printf("\nLAST COMMAND: %s \nMessage: %s\nINPUT >", last_command,msg);
 
@@ -187,4 +209,28 @@ int loadFile(char cardfile[]) {
     fclose(file);
     loaded= true;
     return 0;
+}
+
+void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH]) {
+    // Copy cards into shuffled_cards
+    for (int i = 0; i < MAX_CARDS; i++) {
+        strcpy(shuffled_cards[i], cards[i]);
+    }
+
+    // Seed the random number generator
+    //rand(time(NULL));
+
+    // Fisher-Yates shuffle algorithm
+    for (int i = MAX_CARDS - 1; i > 0; i--) {
+        int random_index = rand() % (i + 1);
+
+        // Swap shuffled_cards[i] and shuffled_cards[random_index]
+        char temp[MAX_CARD_LENGTH];
+        strcpy(temp, shuffled_cards[i]);
+        strcpy(shuffled_cards[i], shuffled_cards[random_index]);
+        strcpy(shuffled_cards[random_index], temp);
+    }
+    for (int i = 0;i < MAX_CARDS; i++){
+        strcpy(cards[i],shuffled_cards[i]);
+    }
 }
