@@ -11,7 +11,7 @@ void printLoadedBoard();
 int loadFile(char[]);
 bool game = true;
 bool loaded = false;
-
+char ok[3] = "OK";
 
 
 
@@ -102,6 +102,7 @@ int printEmptyBoard(){
             }
         }
         printf("[]\t[]\t[]\n");
+        strcpy(msg,ok);
     }
 
     if (strcmp(last_command, "SW") == 0) {
@@ -120,7 +121,9 @@ int printEmptyBoard(){
             }
         }
         printf("%s\t%s\t%s\n", cards[49], cards[50], cards[51]); // Change the last line to print the last 3 elements
-    }}
+        strcpy(msg,ok);
+        }
+    }
 
     if (strcmp(last_command, "SI") == 0) {
         if (!loaded){
@@ -145,7 +148,7 @@ int printEmptyBoard(){
             }
         }
         printf("[]\t[]\t[]\n");
-
+        strcpy(msg,ok);
     }}
 
 
