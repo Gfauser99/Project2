@@ -19,7 +19,7 @@ char ok[3] = "OK";
 
 
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
-char last_command[4] = "";
+char last_command[3] = "";
 
 int main() {
 
@@ -56,8 +56,9 @@ int main() {
     printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     printf("LAST COMMAND:\nMessage:\nINPUT > ");
     while(game) {
-        scanf("%s",last_command);
+        scanf("%s", last_command);
         printEmptyBoard();
+        printf("%s",last_command);
 
 
 
@@ -91,8 +92,6 @@ int printEmptyBoard(){
         //Always print top columns
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
 
-
-
     if (strcmp(last_command,"LD")==0){
 
         loadFile("cards.txt");
@@ -110,7 +109,7 @@ int printEmptyBoard(){
 
     if (strcmp(last_command, "SW") == 0) {
         if (!loaded){
-             strcpy(msg,"Error - no file loaded yet");}
+             strcpy(msg,"Error - no file loaded");}
         // Change k to 0 to start from the first index
         else {for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
@@ -130,7 +129,7 @@ int printEmptyBoard(){
 
     if (strcmp(last_command, "SI") == 0) {
         if (!loaded){
-            strcpy(msg,"Error - no file loaded yet");}
+            strcpy(msg,"Error - no file loaded");}
         else {char pile1[MAX_CARDS/2][MAX_CARD_LENGTH], pile2[MAX_CARDS/2][MAX_CARD_LENGTH];
         for (int i=0;i<26;i++){
         strcpy(pile1[i], cards[i]);
@@ -156,7 +155,7 @@ int printEmptyBoard(){
 
     if (strcmp(last_command, "SR") == 0) {
         if (!loaded){
-            strcpy(msg,"Error - no file loaded yet");}
+            strcpy(msg,"Error - no file loaded");}
         else {
         char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH];
         shuffleCards(cards, shuffled_cards);
@@ -174,7 +173,7 @@ int printEmptyBoard(){
     }
     if (strcmp(last_command, "SD") == 0) {
         if (!loaded){
-            strcpy(msg,"Error - no file loaded yet");}
+            strcpy(msg,"Error - no file loaded");}
         else {
             for (int i = 1; i < 9; i++) {
                 if (i % 2 != 0) {
@@ -190,6 +189,9 @@ int printEmptyBoard(){
         }
     }
 
+    if (strcmp(last_command,"")!=0 && strcmp(msg,ok)!=0) {
+        strcpy(msg,"Error - Invalid command");
+    }
 
     if (strcmp(last_command,"")==0 || strcmp(msg,ok)!=0){
         printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
