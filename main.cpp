@@ -174,29 +174,38 @@ int printEmptyBoard(){
 
         } else {pile_size = 26;}
             char pile1[pile_size][MAX_CARD_LENGTH], pile2[MAX_CARDS-pile_size][MAX_CARD_LENGTH];
-        for (int i=0;i<pile_size;i++){
-        strcpy(pile1[i], cards[i]);
-        if (i+pile_size<MAX_CARDS){
-        strcpy(pile2[i],cards[i+pile_size]);}
 
+
+            for (int i=0;i<pile_size;i++){
+            strcpy(pile1[i], cards[i]);
+            if (i+pile_size<MAX_CARDS){
+            strcpy(pile2[i],cards[i+pile_size]);}
         }
-        if (pile_size*2>MAX_CARDS || pile_size*2==MAX_CARDS){
+            if (pile_size < MAX_CARDS/2){
+                for (int i=2*pile_size;i<MAX_CARDS;i++){
+                    strcpy(pile2[i - pile_size], cards[i]);
+                }
+            }
+            // IF pile 1 is bigger than pile 2, this section will mix the piles
+            if (2*pile_size>=MAX_CARDS){
         while ((mix_index+pile_size)<MAX_CARDS){
            strcpy( cards[2*mix_index],pile1[mix_index]);
             printf("Card in index %d: %s\n",2*mix_index,cards[2*mix_index]);
            strcpy( cards[2*mix_index+1],pile2[mix_index]);
             printf("Card in index %d: %s\n",2*mix_index+1,cards[2*mix_index+1]);
-
            mix_index++;
-       } int new_mix_index=2*mix_index;
+       }
+        int new_mix_index=2*mix_index;
            while (mix_index<pile_size){
                 strcpy(cards[new_mix_index],pile1[mix_index]);
                 new_mix_index++;
-                mix_index++;
+                mix_index++; }
        }
+            // IF pile 2 is bigger than pile 1, this section will mix the piles instead
+        else {
 
-       }
-        else { while ((mix_index+(MAX_CARDS-pile_size))<MAX_CARDS){
+            while ( (mix_index+MAX_CARDS-pile_size) < MAX_CARDS ){
+
                 strcpy( cards[2*mix_index],pile1[mix_index]);
                 printf("Card in index %d: %s\n",2*mix_index,cards[2*mix_index]);
                 strcpy( cards[2*mix_index+1],pile2[mix_index]);
@@ -204,8 +213,9 @@ int printEmptyBoard(){
 
                 mix_index++;
             } int new_mix_index=2*mix_index;
-            while (mix_index<(MAX_CARDS-pile_size)){
+            while (new_mix_index<MAX_CARDS){
                 strcpy(cards[new_mix_index],pile2[mix_index]);
+                printf("Card at index %d: %s\n",new_mix_index,cards[new_mix_index]);
                 new_mix_index++;
                 mix_index++;
             }}
@@ -270,7 +280,7 @@ int printEmptyBoard(){
     }
 
 
-    printf("\nLAST COMMAND: %s %s \nMessage: %s\nINPUT >", command_1,command_2,msg);
+    printf("\nLAST COMMAND: %s %s \nMessage: %s\nINPUT > ", command_1,command_2,msg);
 
 
 return 0;
