@@ -5,12 +5,13 @@
 #include <stdbool.h>
 
 #define MAX_CARDS 52
-#define MAX_CARD_LENGTH 5
+#define MAX_CARD_LENGTH 4
 int printEmptyBoard();
 void printLoadedBoard();
 int loadFile(char[]);
 void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH]);
 int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]);
+void trim_white_space(char *str);
 bool game = true;
 bool loaded = false;
 char ok[3] = "OK";
@@ -23,9 +24,15 @@ char ok[3] = "OK";
  */
 
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
-char last_command[3] = "";
+char last_command[30];
+char command_1[3];
+char command_2[25];
+
+
+
 
 int main() {
+
 
   //  char test123[]="KS";
    /* FILE *file = fopen("cards.txt", "r");
@@ -60,9 +67,30 @@ int main() {
     printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     printf("LAST COMMAND:\nMessage:\nINPUT > ");
     while(game) {
-        scanf("%s", last_command);
+
+        fgets(last_command, sizeof(last_command), stdin);
+        char *token = strtok(last_command, " ");
+        strncpy(command_1, token, sizeof(command_1) - 1);
+        command_1[sizeof(command_1) - 1] = '\0';
+        token = strtok(NULL, " ");
+
+        if (token != NULL && (strcmp(command_1,"LD")==0 || strcmp(command_1,"SI")==0 || strcmp(command_1,"SD")==0)) {
+            strncpy(command_2, token, sizeof(command_2) - 1);
+            command_2[sizeof(command_2) - 1] = '\0';
+            trim_white_space(command_2);
+        } else {
+            command_2[0] = '\0';
+        }
+
+        printf("Sentence 1: %s\n", command_1);
+
+        if (strlen(command_2) > 0) {
+            printf("Sentence 2: %s\n", command_2);
+            if (strcmp(command_2,"test")==0){ printf("correct string capture");}
+            else {printf("incorrect string!!!! %s",command_2);}
+        }
         printEmptyBoard();
-        printf("%s",last_command);
+
 
 
 
@@ -96,9 +124,10 @@ int printEmptyBoard(){
         //Always print top columns
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
 
-    if (strcmp(last_command,"LD")==0){
-
-        loadFile("cards.txt");
+    if (strcmp(command_1,"LD")==0){
+        if (strcmp(command_2,"")!=0){
+            loadFile(command_2);}
+        else {loadFile("cards.txt");}
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
@@ -111,7 +140,7 @@ int printEmptyBoard(){
         strcpy(msg,ok);
     }
 
-    if (strcmp(last_command, "SW") == 0) {
+    if (strcmp(command_1, "SW") == 0) {
         if (!loaded){
              strcpy(msg,"Error - no file loaded");}
         // Change k to 0 to start from the first index
@@ -134,17 +163,55 @@ int printEmptyBoard(){
     if (strcmp(last_command, "SI") == 0) {
         if (!loaded){
             strcpy(msg,"Error - no file loaded");}
-        else {char pile1[MAX_CARDS/2][MAX_CARD_LENGTH], pile2[MAX_CARDS/2][MAX_CARD_LENGTH];
-        for (int i=0;i<26;i++){
+        else {
+            int mix_index = 0;
+            int pile_size;
+
+            if (strcmp(command_2,"")!=0){
+                if (atoi(command_2)>51 || atoi(command_2)<1){
+                    strcpy(msg,"Error - shuffle size out of bounds");
+           }    else { pile_size= atoi(command_2);}
+
+        } else {pile_size = 26;}
+            char pile1[pile_size][MAX_CARD_LENGTH], pile2[MAX_CARDS-pile_size][MAX_CARD_LENGTH];
+        for (int i=0;i<pile_size;i++){
         strcpy(pile1[i], cards[i]);
-        strcpy(pile2[i],cards[i+26]);
-      //  printf("%s ",pile1[i]);
-      //  printf("%s\n",pile2[i]);
+        if (i+pile_size<MAX_CARDS){
+        strcpy(pile2[i],cards[i+pile_size]);}
+
         }
-       for (int i =0;i<MAX_CARDS/2;i++){
-           strcpy( cards[2*i],pile1[i]);
-           strcpy( cards[(2*i)+1],pile2[i]);
+        if (pile_size*2>MAX_CARDS || pile_size*2==MAX_CARDS){
+        while ((mix_index+pile_size)<MAX_CARDS){
+           strcpy( cards[2*mix_index],pile1[mix_index]);
+            printf("Card in index %d: %s\n",2*mix_index,cards[2*mix_index]);
+           strcpy( cards[2*mix_index+1],pile2[mix_index]);
+            printf("Card in index %d: %s\n",2*mix_index+1,cards[2*mix_index+1]);
+
+           mix_index++;
+       } int new_mix_index=2*mix_index;
+           while (mix_index<pile_size){
+                strcpy(cards[new_mix_index],pile1[mix_index]);
+                new_mix_index++;
+                mix_index++;
        }
+
+       }
+        else { while ((mix_index+(MAX_CARDS-pile_size))<MAX_CARDS){
+                strcpy( cards[2*mix_index],pile1[mix_index]);
+                printf("Card in index %d: %s\n",2*mix_index,cards[2*mix_index]);
+                strcpy( cards[2*mix_index+1],pile2[mix_index]);
+                printf("Card in index %d: %s\n",2*mix_index+1,cards[2*mix_index+1]);
+
+                mix_index++;
+            } int new_mix_index=2*mix_index;
+            while (mix_index<(MAX_CARDS-pile_size)){
+                strcpy(cards[new_mix_index],pile2[mix_index]);
+                new_mix_index++;
+                mix_index++;
+            }}
+
+
+        }
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
@@ -155,9 +222,10 @@ int printEmptyBoard(){
         }
         printf("[]\t[]\t[]\n");
         strcpy(msg,ok);
-    }}
+    }
 
-    if (strcmp(last_command, "SR") == 0) {
+
+    if (strcmp(command_1, "SR") == 0) {
         if (!loaded){
             strcpy(msg,"Error - no file loaded");}
         else {
@@ -202,7 +270,7 @@ int printEmptyBoard(){
     }
 
 
-    printf("\nLAST COMMAND: %s \nMessage: %s\nINPUT >", last_command,msg);
+    printf("\nLAST COMMAND: %s %s \nMessage: %s\nINPUT >", command_1,command_2,msg);
 
 
 return 0;
@@ -272,4 +340,16 @@ fprintf(file, "%s\n", cards[i]);
 fclose(file);
 
 return 0;
+}
+
+void trim_white_space(char *str) {
+    int last_non_space = -1;
+    for (int i = 0; str[i]; ++i) {
+        if (!isspace((unsigned char)str[i])) {
+            last_non_space = i;
+        }
+    }
+    if (last_non_space != -1) {
+        str[last_non_space + 1] = '\0';
+    }
 }
