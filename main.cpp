@@ -7,7 +7,7 @@
 #define MAX_CARDS 52
 #define MAX_CARD_LENGTH 4
 int printEmptyBoard();
-void printLoadedBoard();
+int printBoardStartupPhase();
 int loadFile(char[]);
 void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH]);
 int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]);
@@ -91,7 +91,7 @@ int main() {
                 if (strcmp(command_2, "test") == 0) { printf("correct string capture"); }
                 else { printf("incorrect string!!!! %s", command_2); }
             }
-            printEmptyBoard();
+            printBoardStartupPhase();
 
 
 
@@ -318,7 +318,7 @@ int printBoardStartupPhase() {
         strcpy(msg,"Error - invalid command");
     }
 
-    if ( !loaded  |(strcmp(command_1,"")==0 || strcmp(msg,ok)!=0)){
+    if ( !loaded  || (strcmp(command_1,"")==0 || strcmp(msg,ok)!=0)){
         printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     }
 
