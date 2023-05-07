@@ -19,12 +19,6 @@ char msg[30] = "";
 
 
 
-/** TODO IN PREPARE PHASE:
- *          1. Accept file-option in SD.
- *          2. If no optional input - load basic file OR create array
- *          3. Validate file content/name before loading.
- */
-
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
 char last_command[30];
 char command_1[4];
