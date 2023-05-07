@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <unistd.h>
 #define MAX_CARDS 52
 #define MAX_CARD_LENGTH 4
 int printEmptyBoard();
@@ -17,15 +17,16 @@ bool loaded = false;
 char ok[3] = "OK";
 
 
+
 /** TODO IN PREPARE PHASE:
- *          1. Accept optional input in LD, SI and SD.
+ *          1. Accept file-option in SD.
  *          2. If no optional input - load basic file OR create array
- *          3. Validate file content before loading.
+ *          3. Validate file content/name before loading.
  */
 
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
 char last_command[30];
-char command_1[3];
+char command_1[4];
 char command_2[25];
 
 
@@ -69,27 +70,28 @@ int main() {
     while(game) {
 
         fgets(last_command, sizeof(last_command), stdin);
-        char *token = strtok(last_command, " ");
-        strncpy(command_1, token, sizeof(command_1) - 1);
-        command_1[sizeof(command_1) - 1] = '\0';
-        token = strtok(NULL, " ");
+        printf("%s",last_command);
+            char *token = strtok(last_command, " ");
+            strncpy(command_1, token, sizeof(command_1) - 1);
+            command_1[sizeof(command_1) - 1] = '\0';
+            trim_white_space(command_1);
+            token = strtok(NULL, " ");
 
-        if (token != NULL && (strcmp(command_1,"LD")==0 || strcmp(command_1,"SI")==0 || strcmp(command_1,"SD")==0)) {
-            strncpy(command_2, token, sizeof(command_2) - 1);
-            command_2[sizeof(command_2) - 1] = '\0';
-            trim_white_space(command_2);
-        } else {
-            command_2[0] = '\0';
-        }
+            if (token != NULL &&
+                (strcmp(command_1, "LD") == 0 || strcmp(command_1, "SI") == 0 || strcmp(command_1, "SD") == 0)) {
+                strncpy(command_2, token, sizeof(command_2) - 1);
+                command_2[sizeof(command_2) - 1] = '\0';
+                trim_white_space(command_2);
+            } else {
+                command_2[0] = '\0';
+            }
 
-        printf("Sentence 1: %s\n", command_1);
-
-        if (strlen(command_2) > 0) {
-            printf("Sentence 2: %s\n", command_2);
-            if (strcmp(command_2,"test")==0){ printf("correct string capture");}
-            else {printf("incorrect string!!!! %s",command_2);}
-        }
-        printEmptyBoard();
+            if (strlen(command_2) > 0) {
+                printf("Sentence 2: %s\n", command_2);
+                if (strcmp(command_2, "test") == 0) { printf("correct string capture"); }
+                else { printf("incorrect string!!!! %s", command_2); }
+            }
+            printEmptyBoard();
 
 
 
@@ -112,128 +114,169 @@ int main() {
 
 
 
-int printEmptyBoard(){
+int printBoardStartupPhase() {
 
-    if (strcmp(last_command, "QQ") == 0) {
-        game=false;
+    if (strcmp(command_1, "QQ") == 0) {
+        game = false;
         return 0;
     }
-    char msg[30]="";
+    char msg[30] = "";
     int j = 1;
     int k = 0;
-        //Always print top columns
-    printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
+    //Always print top columns
+    printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
 
-    if (strcmp(command_1,"LD")==0){
-        if (strcmp(command_2,"")!=0){
-            loadFile(command_2);}
-        else {loadFile("cards.txt");}
+    if (strcmp(command_1, "LD") == 0) {
+        if (strcmp(command_2, "") == 0) {
+              const char *suits = "CDHS";
+                const char *values = "A23456789TJQK";
+
+                int index = 0;
+                for (int i = 0; i < 4; i++) {
+                    for (int j = 0; j < 13; j++) {
+                        cards[index][0] = values[j];
+                        cards[index][1] = suits[i];
+                        cards[index][2] = '\0';
+                        index++;
+                    }
+                }
+                loaded=true;
+                strcpy(msg, ok);
+        }
+        else {
+        if (access(command_2, F_OK) == 0) {
+            loadFile(command_2);
+            strcpy(msg, ok);}
+        else{ strcpy(msg, "Error - file doesn't exist");}
+        }
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
-                j++;}
-            if (i%2 == 0 && i < 8) {
+                j++;
+            }
+            if (i % 2 == 0 && i < 8) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
             }
         }
         printf("[]\t[]\t[]\n");
-        strcpy(msg,ok);
+
     }
 
     if (strcmp(command_1, "SW") == 0) {
-        if (!loaded){
-             strcpy(msg,"Error - no file loaded");}
-        // Change k to 0 to start from the first index
-        else {for (int i = 1; i < 9; i++) {
-            if (i % 2 != 0) {
-                printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t\t[]\tF%d\n", cards[k], cards[k+1], cards[k+2], cards[k+3], cards[k+4], cards[k+5], cards[k+6], j);
-                k = k + 7;
-                j++;
-            }
-            if (i%2 == 0 && i < 8) {
-                printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", cards[k], cards[k+1], cards[k+2], cards[k+3], cards[k+4], cards[k+5], cards[k+6]);
-                k = k + 7;
-            }
+        if (!loaded) {
+            strcpy(msg, "Error - no file loaded");
         }
-        printf("%s\t%s\t%s\n", cards[49], cards[50], cards[51]); // Change the last line to print the last 3 elements
-        strcpy(msg,ok);
+            // Change k to 0 to start from the first index
+        else {
+            for (int i = 1; i < 9; i++) {
+                if (i % 2 != 0) {
+                    printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t\t[]\tF%d\n", cards[k], cards[k + 1], cards[k + 2],
+                           cards[k + 3], cards[k + 4], cards[k + 5], cards[k + 6], j);
+                    k = k + 7;
+                    j++;
+                }
+                if (i % 2 == 0 && i < 8) {
+                    printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\n", cards[k], cards[k + 1], cards[k + 2], cards[k + 3],
+                           cards[k + 4], cards[k + 5], cards[k + 6]);
+                    k = k + 7;
+                }
+            }
+            printf("%s\t%s\t%s\n", cards[49], cards[50],
+                   cards[51]); // Change the last line to print the last 3 elements
+            strcpy(msg, ok);
         }
     }
 
-    if (strcmp(last_command, "SI") == 0) {
-        if (!loaded){
-            strcpy(msg,"Error - no file loaded");}
-        else {
+    if (strcmp(command_1, "SI") == 0) {
+        if (loaded) {
             int mix_index = 0;
-            int pile_size;
+            srand(time(NULL));
+            int pile_size = (rand() % 51) + 1;
+            int valid_shuffle_index = 1;
 
-            if (strcmp(command_2,"")!=0){
-                if (atoi(command_2)>51 || atoi(command_2)<1){
-                    strcpy(msg,"Error - shuffle size out of bounds");
-           }    else { pile_size= atoi(command_2);}
+            if (strcmp(command_2, "") != 0) {
+                if (atoi(command_2) < 51 && atoi(command_2) > 1) {
 
-        } else {pile_size = 26;}
-            char pile1[pile_size][MAX_CARD_LENGTH], pile2[MAX_CARDS-pile_size][MAX_CARD_LENGTH];
-
-
-            for (int i=0;i<pile_size;i++){
-            strcpy(pile1[i], cards[i]);
-            if (i+pile_size<MAX_CARDS){
-            strcpy(pile2[i],cards[i+pile_size]);}
-        }
-            if (pile_size < MAX_CARDS/2){
-                for (int i=2*pile_size;i<MAX_CARDS;i++){
-                    strcpy(pile2[i - pile_size], cards[i]);
+                    pile_size = atoi(command_2);
                 }
-            }
-            // IF pile 1 is bigger than pile 2, this section will mix the piles
-            if (2*pile_size>=MAX_CARDS){
-        while ((mix_index+pile_size)<MAX_CARDS){
-           strcpy( cards[2*mix_index],pile1[mix_index]);
-            printf("Card in index %d: %s\n",2*mix_index,cards[2*mix_index]);
-           strcpy( cards[2*mix_index+1],pile2[mix_index]);
-            printf("Card in index %d: %s\n",2*mix_index+1,cards[2*mix_index+1]);
-           mix_index++;
-       }
-        int new_mix_index=2*mix_index;
-           while (mix_index<pile_size){
-                strcpy(cards[new_mix_index],pile1[mix_index]);
-                new_mix_index++;
-                mix_index++; }
-       }
-            // IF pile 2 is bigger than pile 1, this section will mix the piles instead
-        else {
-
-            while ( (mix_index+MAX_CARDS-pile_size) < MAX_CARDS ){
-
-                strcpy( cards[2*mix_index],pile1[mix_index]);
-                printf("Card in index %d: %s\n",2*mix_index,cards[2*mix_index]);
-                strcpy( cards[2*mix_index+1],pile2[mix_index]);
-                printf("Card in index %d: %s\n",2*mix_index+1,cards[2*mix_index+1]);
-
-                mix_index++;
-            } int new_mix_index=2*mix_index;
-            while (new_mix_index<MAX_CARDS){
-                strcpy(cards[new_mix_index],pile2[mix_index]);
-                printf("Card at index %d: %s\n",new_mix_index,cards[new_mix_index]);
-                new_mix_index++;
-                mix_index++;
+                else {
+                strcpy(msg, "Error - shuffle index");
+                printf("%s\n", msg);
+                valid_shuffle_index = 0;
             }}
 
 
+            if (valid_shuffle_index) {
+                char pile1[pile_size][MAX_CARD_LENGTH], pile2[MAX_CARDS - pile_size][MAX_CARD_LENGTH];
+
+
+                for (int i = 0; i < pile_size; i++) {
+                    strcpy(pile1[i], cards[i]);
+                    if (i + pile_size < MAX_CARDS) {
+                        strcpy(pile2[i], cards[i + pile_size]);
+                    }
+                }
+                if (pile_size < MAX_CARDS / 2) {
+                    for (int i = 2 * pile_size; i < MAX_CARDS; i++) {
+                        strcpy(pile2[i - pile_size], cards[i]);
+                    }
+                }
+                // IF pile 1 is bigger than pile 2, this section will mix the piles
+                if (2 * pile_size >= MAX_CARDS) {
+                    while ((mix_index + pile_size) < MAX_CARDS) {
+                        strcpy(cards[2 * mix_index], pile1[mix_index]);
+                        printf("Card in index %d: %s\n", 2 * mix_index, cards[2 * mix_index]);
+                        strcpy(cards[2 * mix_index + 1], pile2[mix_index]);
+                        printf("Card in index %d: %s\n", 2 * mix_index + 1, cards[2 * mix_index + 1]);
+                        mix_index++;
+                    }
+                    int new_mix_index = 2 * mix_index;
+                    while (mix_index < pile_size) {
+                        strcpy(cards[new_mix_index], pile1[mix_index]);
+                        new_mix_index++;
+                        mix_index++;
+                    }
+                }
+                    // IF pile 2 is bigger than pile 1, this section will mix the piles instead
+                else {
+
+                    while ((mix_index + MAX_CARDS - pile_size) < MAX_CARDS) {
+
+                        strcpy(cards[2 * mix_index], pile1[mix_index]);
+                        printf("Card in index %d: %s\n", 2 * mix_index, cards[2 * mix_index]);
+                        strcpy(cards[2 * mix_index + 1], pile2[mix_index]);
+                        printf("Card in index %d: %s\n", 2 * mix_index + 1, cards[2 * mix_index + 1]);
+
+                        mix_index++;
+                    }
+                    int new_mix_index = 2 * mix_index;
+                    while (new_mix_index < MAX_CARDS) {
+                        strcpy(cards[new_mix_index], pile2[mix_index]);
+                        printf("Card at index %d: %s\n", new_mix_index, cards[new_mix_index]);
+                        new_mix_index++;
+                        mix_index++;
+                    }
+                }
+                strcpy(msg, ok);
+            }
+
+
+        }
+        else { strcpy(msg, "Error - no file loaded");
         }
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
-                j++;}
-            if (i%2 == 0 && i < 8) {
+                j++;
+            }
+            if (i % 2 == 0 && i < 8) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
             }
         }
         printf("[]\t[]\t[]\n");
-        strcpy(msg,ok);
-    }
 
+
+    }
 
     if (strcmp(command_1, "SR") == 0) {
         if (!loaded){
@@ -251,9 +294,9 @@ int printEmptyBoard(){
             }
             printf("[]\t[]\t[]\n");
             strcpy(msg,ok);
-    }
-    }
-    if (strcmp(last_command, "SD") == 0) {
+
+    }}
+    if (strcmp(command_1, "SD") == 0) {
         if (!loaded){
             strcpy(msg,"Error - no file loaded");}
         else {
@@ -266,16 +309,16 @@ int printEmptyBoard(){
                 }
             }
             printf("[]\t[]\t[]\n");
-            saveDeck(cards, "test.txt");
+            saveDeck(cards, command_2);
             strcpy(msg,ok);
         }
     }
 
-    if (strcmp(last_command,"")!=0 && strcmp(msg,ok)!=0) {
-        strcpy(msg,"Error - Invalid command");
+    if (strcmp(msg,"")==0){
+        strcpy(msg,"Error - invalid command");
     }
 
-    if (strcmp(last_command,"")==0 || strcmp(msg,ok)!=0){
+    if ( !loaded  |(strcmp(command_1,"")==0 || strcmp(msg,ok)!=0)){
         printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     }
 
