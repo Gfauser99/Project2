@@ -309,8 +309,13 @@ int printBoardStartupPhase() {
                 }
             }
             printf("[]\t[]\t[]\n");
+            if (access(command_2, F_OK) == 0) {
             saveDeck(cards, command_2);
             strcpy(msg,ok);
+        }
+            else if (strcmp(command_2,"")==0){
+               saveDeck(cards, "cards.txt");
+            }
         }
     }
 
