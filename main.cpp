@@ -15,6 +15,7 @@ void trim_white_space(char *str);
 bool game = true;
 bool loaded = false;
 char ok[3] = "OK";
+char msg[30] = "";
 
 
 
@@ -70,7 +71,7 @@ int main() {
     while(game) {
 
         fgets(last_command, sizeof(last_command), stdin);
-        printf("%s",last_command);
+
             char *token = strtok(last_command, " ");
             strncpy(command_1, token, sizeof(command_1) - 1);
             command_1[sizeof(command_1) - 1] = '\0';
@@ -87,9 +88,9 @@ int main() {
             }
 
             if (strlen(command_2) > 0) {
-                printf("Sentence 2: %s\n", command_2);
-                if (strcmp(command_2, "test") == 0) { printf("correct string capture"); }
-                else { printf("incorrect string!!!! %s", command_2); }
+               // printf("Sentence 2: %s\n", command_2);
+               // if (strcmp(command_2, "test") == 0) { printf("correct string capture"); }
+               // else { printf("incorrect string!!!! %s", command_2); }
             }
             printBoardStartupPhase();
 
@@ -115,12 +116,13 @@ int main() {
 
 
 int printBoardStartupPhase() {
+    strcpy(msg,"");
 
     if (strcmp(command_1, "QQ") == 0) {
         game = false;
         return 0;
     }
-    char msg[30] = "";
+
     int j = 1;
     int k = 0;
     //Always print top columns
@@ -146,9 +148,11 @@ int printBoardStartupPhase() {
         else {
         if (access(command_2, F_OK) == 0) {
             loadFile(command_2);
-            strcpy(msg, ok);}
+            }
         else{ strcpy(msg, "Error - file doesn't exist");}
         }
+
+        if (loaded){
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
@@ -158,7 +162,7 @@ int printBoardStartupPhase() {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
             }
         }
-        printf("[]\t[]\t[]\n");
+        printf("[]\t[]\t[]\n");}
 
     }
 
@@ -195,13 +199,13 @@ int printBoardStartupPhase() {
             int valid_shuffle_index = 1;
 
             if (strcmp(command_2, "") != 0) {
-                if (atoi(command_2) < 51 && atoi(command_2) > 1) {
+                if (atoi(command_2) < 52 && atoi(command_2) > 0) {
 
                     pile_size = atoi(command_2);
                 }
                 else {
                 strcpy(msg, "Error - shuffle index");
-                printf("%s\n", msg);
+
                 valid_shuffle_index = 0;
             }}
 
@@ -243,16 +247,16 @@ int printBoardStartupPhase() {
                     while ((mix_index + MAX_CARDS - pile_size) < MAX_CARDS) {
 
                         strcpy(cards[2 * mix_index], pile1[mix_index]);
-                        printf("Card in index %d: %s\n", 2 * mix_index, cards[2 * mix_index]);
+                       // printf("Card in index %d: %s\n", 2 * mix_index, cards[2 * mix_index]);
                         strcpy(cards[2 * mix_index + 1], pile2[mix_index]);
-                        printf("Card in index %d: %s\n", 2 * mix_index + 1, cards[2 * mix_index + 1]);
+                       // printf("Card in index %d: %s\n", 2 * mix_index + 1, cards[2 * mix_index + 1]);
 
                         mix_index++;
                     }
                     int new_mix_index = 2 * mix_index;
                     while (new_mix_index < MAX_CARDS) {
                         strcpy(cards[new_mix_index], pile2[mix_index]);
-                        printf("Card at index %d: %s\n", new_mix_index, cards[new_mix_index]);
+                      //  printf("Card at index %d: %s\n", new_mix_index, cards[new_mix_index]);
                         new_mix_index++;
                         mix_index++;
                     }
@@ -315,15 +319,27 @@ int printBoardStartupPhase() {
         }
             else if (strcmp(command_2,"")==0){
                saveDeck(cards, "cards.txt");
+                strcpy(msg,ok);
             }
         }
     }
 
     if (strcmp(msg,"")==0){
         strcpy(msg,"Error - invalid command");
+        if (loaded){
+            for (int i = 1; i < 9; i++) {
+                if (i % 2 != 0) {
+                    printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
+                    j++;
+                }
+                if (i % 2 == 0 && i < 8) {
+                    printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
+                }
+            }
+            printf("[]\t[]\t[]\n");}
     }
 
-    if ( !loaded  || (strcmp(command_1,"")==0 || strcmp(msg,ok)!=0)){
+    if ( !loaded  && (strcmp(command_1,"")==0 || strcmp(msg,ok)!=0)){
         printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     }
 
@@ -334,30 +350,58 @@ int printBoardStartupPhase() {
 return 0;
 
 }
-
 int loadFile(char cardfile[]) {
-
     FILE *file = fopen(cardfile, "r");
-   // printf("%s",cardfile);
+
     if (file == NULL) {
-        printf("Error opening file.\n");
         return 1;
     }
 
-
+    char temp_cards[MAX_CARDS][MAX_CARD_LENGTH];
     int i = 0;
 
-    while (fgets(cards[i], MAX_CARD_LENGTH, file) != NULL && i < MAX_CARDS) {
-// Remove newline character if present
-        size_t len = strlen(cards[i]);
-        if (cards[i][len - 1] == '\n') {
-            cards[i][len - 1] = '\0';
+    while (fgets(temp_cards[i], MAX_CARD_LENGTH, file) != NULL && i < MAX_CARDS) {
+        size_t len = strlen(temp_cards[i]);
+        if (temp_cards[i][len - 1] == '\n') {
+            temp_cards[i][len - 1] = '\0';
         }
-
         i++;
     }
     fclose(file);
-    loaded= true;
+
+    if (i != MAX_CARDS) {
+        strcpy(msg,"Error - wrong file content");
+        return 1;
+    }
+
+    const char *suits = "CDHS";
+    const char *values = "A23456789TJQK";
+    int found;
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 13; j++) {
+            found = 0;
+            char card[3] = {values[j], suits[i], '\0'};
+            for (int k = 0; k < MAX_CARDS; k++) {
+                if (strcmp(card, temp_cards[k]) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+
+                printf("Error: Card %s not found in the file.\n", card);
+                return 1;
+            }
+        }
+    }
+
+    for (int i = 0; i < MAX_CARDS; i++) {
+        strcpy(cards[i], temp_cards[i]);
+    }
+
+    strcpy(msg, ok);
+    loaded = true;
     return 0;
 }
 
@@ -369,7 +413,7 @@ void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MA
 
 
 
-   // Fisher-yates shuffle style from online example
+
     for (int i = MAX_CARDS - 1; i > 0; i--) {
         int random_index = rand() % (i + 1);
 
@@ -387,7 +431,7 @@ void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MA
 int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]){
 FILE *file = fopen(filename, "w");
 if (file == NULL) {
-printf("Error opening file.\n");
+    strcpy(msg,"Error - file doesn't exist");
 return 1;
 }
 
