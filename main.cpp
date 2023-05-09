@@ -20,7 +20,7 @@ typedef struct CardNode {
 
 
 void playPhasePrintInitial();
-void printBoard(CardNode *lists[], int list_lengths[]);
+void printBoard(CardNode *lists[], int list_lengths[], CardNode *foundations[]);
 int  printBoardPlayPhase();
 int printBoardStartupPhase();
 int loadFile(char[]);
@@ -30,6 +30,7 @@ void trimWhiteSpace(char *str);
 void initialCardAppend(CardNode **list, const char *card, int visible_position);
 void printBoard(CardNode *lists[], int list_lengths[]);
 void print_list(CardNode *list);
+
 
 bool game = true;
 bool loaded = false;
@@ -44,8 +45,13 @@ CardNode *lists[NUM_LISTS] ={};
 int list_lengths[NUM_LISTS] = {1, 6, 7, 8, 9, 10, 11};
 int list_positions[NUM_LISTS] = {0};
 int max_length = 11;
+CardNode *foundations[4] = {NULL, NULL, NULL, NULL};
 
 bool isValidMove(const char *src_card, const char *dest_card) {
+    if (dest_card == NULL) {
+        return src_card[0] == 'K';
+    }
+
     if (dest_card[0] == 'A') {
         return false;
     }
@@ -74,13 +80,51 @@ bool isValidMove(const char *src_card, const char *dest_card) {
 
     return false;
 }
+
+int cardValueToIndex(char value) {
+    switch (value) {
+        case 'A': return 0;
+        case '2': return 1;
+        case '3': return 2;
+        case '4': return 3;
+        case '5': return 4;
+        case '6': return 5;
+        case '7': return 6;
+        case '8': return 7;
+        case '9': return 8;
+        case 'T': return 9;
+        case 'J': return 10;
+        case 'Q': return 11;
+        case 'K': return 12;
+        default: return -1;
+    }
+}
+
+bool isValidFoundationMove(const char *src_card, const char *dest_card) {
+    if (dest_card == NULL) {
+        return src_card[0] == 'A';
+    }
+
+    if (src_card[1] != dest_card[1]) {
+        return false;
+    }
+
+    int src_value_index = cardValueToIndex(src_card[0]);
+    int dest_value_index = cardValueToIndex(dest_card[0]);
+
+    return src_value_index == dest_value_index + 1;
+}
+
 void playMove(const char* move) {
+    strcpy(msg,"");
+
 
 
     char src[3], optional_card[3], dest[3];
     char move_copy[strlen(move) + 1];
     strcpy(move_copy, move);
     optional_card[0] = '\0';
+    bool has_optional_card = false;
 
     if (strlen(move_copy)==9){
         char *token = strtok(move_copy, ":");
@@ -89,50 +133,52 @@ void playMove(const char* move) {
     if (token != NULL) {
         strncpy(src, token, sizeof(src) - 1);
         src[sizeof(src) - 1] = '\0';
-        printf("SOURCE: %s\n", src);
+
 
         token = strtok(NULL, "->");
         if (token != NULL) {
             strncpy(optional_card, token, sizeof(optional_card) - 1);
             optional_card[sizeof(optional_card) - 1] = '\0';
-            printf("Card: %s\n", optional_card);
+
 
 
             if (token[0] == 'C') {
                 strncpy(dest, optional_card, sizeof(dest) - 1);
                 dest[sizeof(dest) - 1] = '\0';
-                printf("DEST: %s\n", dest);
+
                 optional_card[0] = '\0';
             } else {
                 token = strtok(NULL, "->");
                 if (token != NULL) {
                     strncpy(dest, token, sizeof(dest) - 1);
                     dest[sizeof(dest) - 1] = '\0';
-                    printf("DEST: %s\n", dest);
+
                 }
             }
         }
     }
+    has_optional_card= true;
     }
     if (strlen(move_copy)==6){
         char *token = strtok(move_copy, "->");
         if (token != NULL) {
             strncpy(src, token, sizeof(src) - 1);
 
-            printf("SOURCE: %s\n", src);
+
             src[sizeof(src) - 1] = '\0';
 
             token = strtok(NULL, "->");
             if (token != NULL) {
                 strncpy(dest, token, sizeof(dest) - 1);
-                printf("DEST: %s\n", dest);
+
                 dest[sizeof(dest) - 1] = '\0';
             }}}
 
 
 
 
-        if ((src[0]  == 'C') && ((dest[0])=='C')) {
+
+
             int src_list_index = src[1] - '1';
             CardNode *src_list = lists[src_list_index];
             int dest_list_index = dest[1] - '1';
@@ -144,59 +190,194 @@ void playMove(const char* move) {
             CardNode *dest_list_tail = dest_list;
 
             if (src_list != NULL) {
-                while (src_list->next != NULL) {
-                    src_list_prev = src_list;
-                    src_list = src_list->next;
-                }
-                card_to_move = src_list;
+                CardNode *src_list_prev = NULL;
+                CardNode *dest_list_prev = NULL;}
 
-                if (dest_list != NULL) {
-                    while (dest_list->next != NULL) {
+    if (src[0] == 'F' && dest[0] == 'C') {
+        int src_list_index = src[1] - '1';
+        int dest_list_index = dest[1] - '1';
+
+        CardNode *src_list = foundations[src_list_index];
+        CardNode *dest_list = lists[dest_list_index];
+
+        if (src_list != NULL) {
+            CardNode *dest_list_tail = dest_list;
+            CardNode *dest_list_prev = NULL;
+
+            if (dest_list != NULL) {
+                while (dest_list_tail->next != NULL) {
+                    dest_list_prev = dest_list_tail;
+                    dest_list_tail = dest_list_tail->next;
+                }
+            }
+
+            if (isValidMove(src_list->card, dest_list_tail == NULL ? NULL : dest_list_tail->card)) {
+                foundations[src_list_index] = src_list->next;
+                src_list->next = NULL;
+
+                if (dest_list_tail != NULL) {
+                    dest_list_tail->next = src_list;
+                } else {
+                    lists[dest_list_index] = src_list;
+                }
+                list_lengths[dest_list_index]++;
+            } else {
+                strcpy(msg,"Error - Invalid Move");
+
+            }
+        } else {
+            strcpy(msg,"Error - Foundation Empty");
+        }
+    }
+                if ((src[0]  == 'C') && ((dest[0])=='C')) {
+                    // Find the optional_card in the source list, if specified
+                    if (has_optional_card) {
+                        while (src_list != NULL && strcmp(src_list->card, optional_card) != 0) {
+                            src_list_prev = src_list;
+                            src_list = src_list->next;
+                        }
+                    } else {
+                        while (src_list->next != NULL) {
+                            src_list_prev = src_list;
+                            src_list = src_list->next;
+                        }
+                    }
+
+                    // If the specified card was not found just return
+                    if (src_list == NULL) {
+                        strcpy(msg, "Error: Card not in list");
+
+                        return;
+                    }
+
+                    // Move the card or cards to the destination list
+                    card_to_move = src_list;
+                    while (dest_list != NULL && dest_list->next != NULL) {
                         dest_list_prev = dest_list;
                         dest_list = dest_list->next;
-                    }}
+                    }
+                    if (dest_list == NULL) {
+                        if (card_to_move->card[0] == 'K') {
+                            if (src_list_prev != NULL) {
+                                src_list_prev->next = NULL;
+                                if (!src_list_prev->visible) {
+                                    src_list_prev->visible = true;
+                                }
+                                list_lengths[src_list_index]--;
+                            } else {
+                                lists[src_list_index] = NULL;
+                                list_lengths[src_list_index]--;
+                            }
 
-                if (isValidMove(card_to_move->card, dest_list->card)) {
-                    if (src_list_prev != NULL) {
-                        src_list_prev->next = NULL;
-                        if (!src_list_prev->visible) {
-                            src_list_prev->visible = true;
+                            card_to_move->visible = true; // Set the moved card's visibility to true
+                            lists[dest_list_index] = card_to_move;
+                            list_lengths[dest_list_index]++;
+                        } else {
+                            strcpy(msg,"Error - Invalid Move");
+
                         }
-                        list_lengths[src_list_index]--;
                     } else {
-                        lists[src_list_index] = NULL;
-                        list_lengths[src_list_index]--;
-                    }
+                        while (dest_list->next != NULL) {
+                            dest_list_prev = dest_list;
+                            dest_list = dest_list->next;
+                        }}
 
-                    while (dest_list_tail->next != NULL) {
-                        dest_list_tail = dest_list_tail->next;
-                    }
-                    dest_list_tail->next = card_to_move;
-                    list_lengths[dest_list_index]++;
+                    if (isValidMove(card_to_move->card, dest_list->card)) {
+                        if (src_list_prev != NULL) {
+                            src_list_prev->next = NULL;
+                            if (!src_list_prev->visible) {
+                                src_list_prev->visible = true;
+                            }
+                            list_lengths[src_list_index]--;
+                        } else {
+                            lists[src_list_index] = NULL;
+                            list_lengths[src_list_index]--;
+                        }
 
-                } else {
-                    printf("Invalid move.\n");
+                        if (dest_list != NULL) {
+                            dest_list_tail = dest_list;
+
+                            while (dest_list_tail->next != NULL) {
+                                dest_list_tail = dest_list_tail->next;
+                            }
+
+
+
+                            dest_list_tail->next = card_to_move;
+                        } else {
+                            lists[dest_list_index] = card_to_move;
+                        }
+                        list_lengths[dest_list_index]++;
+
+                    }
                 }
-            } else {
-                printf("Source list is empty.\n");
-            }
-        }
 
-        int new_max_length = 0;
-        for (int i = 0; i < NUM_LISTS; i++) {
-            if (list_lengths[i] > new_max_length) {
-                new_max_length = list_lengths[i];
-            }
-        }
 
-        if (new_max_length != max_length) {
-            max_length = new_max_length;
-            printf("New max length is: %d\n", max_length);
-        } else {
-            printf("Max length unchanged: %d\n", max_length);
-        }
+        else if (src[0] == 'C' && dest[0] == 'F') {
 
-        printBoard(lists, list_lengths);
+
+                    int src_list_index = src[1] - '1';
+                    CardNode *src_list = lists[src_list_index];
+                    int dest_list_index = dest[1] - '1';
+
+                    if (src_list != NULL) {
+                        CardNode *src_list_prev = NULL;
+
+                        while (src_list->next != NULL) {
+                            src_list_prev = src_list;
+                            src_list = src_list->next;
+                        }
+
+
+                        if (isValidFoundationMove(src_list->card,
+                                                  foundations[dest_list_index] ? foundations[dest_list_index]->card
+                                                                               : NULL)) {
+                            if (src_list_prev != NULL) {
+                                src_list_prev->next = NULL;
+                                if (!src_list_prev->visible) {
+                                    src_list_prev->visible = true;
+                                }
+                                list_lengths[src_list_index]--;
+                            } else {
+                                lists[src_list_index] = NULL;
+                                list_lengths[src_list_index]--;
+                            }
+
+                            src_list->next = foundations[dest_list_index];
+                            foundations[dest_list_index] = src_list;
+                        } else {
+                            strcpy(msg,"Error - Invalid move");
+
+                        }
+                    } else {
+                        printf("Source list is empty.\n");
+                    }
+                    }
+
+
+    int new_max_length = 0;
+    for (int i = 0; i < NUM_LISTS; i++) {
+        int current_list_length = 0;
+        CardNode *current_list = lists[i];
+        while (current_list != NULL) {
+            current_list_length++;
+            current_list = current_list->next;
+        }
+        if (current_list_length > new_max_length) {
+            new_max_length = current_list_length;
+        }
+    }
+
+    if (new_max_length != max_length) {
+        max_length = new_max_length;
+
+    }
+
+    if (strcmp(msg,"")==0){
+        strcpy(msg,ok);
+    }
+        printBoard(lists, list_lengths, foundations);
+
     }
 
 
@@ -268,8 +449,9 @@ int main() {
 int printBoardPlayPhase(){
     trimWhiteSpace(last_command);
     int j=1;
-    playMove(last_command);
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
+    playMove(last_command);
+
 
     if (strcmp(last_command,"Q")==0){
         strcpy(phase,"STARTUP");
@@ -295,6 +477,7 @@ int printBoardPlayPhase(){
 }
 
 int printBoardStartupPhase() {
+
     strcpy(msg,"");
 
     if (strcmp(command_1, "QQ") == 0) {
@@ -420,9 +603,9 @@ int printBoardStartupPhase() {
                 if (2 * pile_size >= MAX_CARDS) {
                     while ((mix_index + pile_size) < MAX_CARDS) {
                         strcpy(cards[2 * mix_index], pile1[mix_index]);
-                        printf("Card in index %d: %s\n", 2 * mix_index, cards[2 * mix_index]);
+
                         strcpy(cards[2 * mix_index + 1], pile2[mix_index]);
-                        printf("Card in index %d: %s\n", 2 * mix_index + 1, cards[2 * mix_index + 1]);
+
                         mix_index++;
                     }
                     int new_mix_index = 2 * mix_index;
@@ -669,8 +852,7 @@ void initialCardAppend(CardNode **list, const char *card, int visible_position) 
     }
 }
 
-void printBoard(CardNode *lists[], int list_lengths[]) {
-
+void printBoard(CardNode *lists[], int list_lengths[], CardNode *foundations[]) {
     int F_val = 1;
 
     for (int i = 0; i < NUM_LISTS; i++) {
@@ -679,9 +861,7 @@ void printBoard(CardNode *lists[], int list_lengths[]) {
         }
     }
 
-    // Prints every row of the board one at a time. Prints F(1,2,3,4) depending on row
-    // and skips the columns in rows where current = 0 (when list doesn't reach length of j)
-    for (int i = 0; i <= max_length; i++) { // Updated condition
+    for (int i = 0; i <= max_length; i++) {
         for (int j = 0; j < NUM_LISTS; j++) {
             CardNode *current = lists[j];
             int k = 0;
@@ -700,7 +880,13 @@ void printBoard(CardNode *lists[], int list_lengths[]) {
                     printf("[]\t");
                 }
                 if (j == (NUM_LISTS - 1) && i % 2 == 0 && i <= 6) {
-                    printf("\t[]\tF%d", F_val);
+                    printf("\t");
+                    if (foundations[F_val - 1] != NULL) {
+                        printf("%s", foundations[F_val - 1]->card);
+                    } else {
+                        printf("[]");
+                    }
+                    printf("\tF%d", F_val);
                     F_val++;
                 }
             } else {
@@ -737,7 +923,7 @@ void playPhasePrintInitial(){
          print_list(lists[i]);
      }*/
 
-    printBoard(lists, list_lengths);
+    printBoard(lists, list_lengths,foundations);
 
 }
 
