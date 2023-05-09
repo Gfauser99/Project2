@@ -29,7 +29,7 @@ int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]);
 void trimWhiteSpace(char *str);
 void initialCardAppend(CardNode **list, const char *card, int visible_position);
 void printBoard(CardNode *lists[], int list_lengths[]);
-//void print_list(CardNode *list);
+void print_list(CardNode *list);
 
 bool game = true;
 bool loaded = false;
@@ -40,33 +40,165 @@ char cards[MAX_CARDS][MAX_CARD_LENGTH];
 char last_command[30];
 char command_1[4];
 char command_2[25];
+CardNode *lists[NUM_LISTS] ={};
+int list_lengths[NUM_LISTS] = {1, 6, 7, 8, 9, 10, 11};
+int list_positions[NUM_LISTS] = {0};
+int max_length = 11;
+
+bool isValidMove(const char *src_card, const char *dest_card) {
+    if (dest_card[0] == 'A') {
+        return false;
+    }
+
+    bool is_suit_different = src_card[1] != dest_card[1];
+
+    if (src_card[0] == 'A') {
+        return dest_card[0] == '2' && is_suit_different;
+    }
+
+    if (src_card[0] == 'Q') {
+        return dest_card[0] == 'K' && is_suit_different;
+    }
+
+    if (src_card[0] == 'J') {
+        return dest_card[0] == 'Q' && is_suit_different;
+    }
+
+    if (src_card[0] == 'T') {
+        return dest_card[0] == 'J' && is_suit_different;
+    }
+
+    if (isdigit(src_card[0]) && isdigit(dest_card[0])) {
+        return (dest_card[0] - src_card[0] == 1) && is_suit_different;
+    }
+
+    return false;
+}
+void playMove(const char* move) {
 
 
-
-
-
-
-void playMove(const char* move){
-    char src[6], dest[3];
-    char move_copy[strlen(move) + 1]; // Create a copy of the move string to avoid modifying the original string
+    char src[3], optional_card[3], dest[3];
+    char move_copy[strlen(move) + 1];
     strcpy(move_copy, move);
+    optional_card[0] = '\0';
 
-    char *token = strtok(move_copy, "->");
+    if (strlen(move_copy)==9){
+        char *token = strtok(move_copy, ":");
+
+
     if (token != NULL) {
         strncpy(src, token, sizeof(src) - 1);
         src[sizeof(src) - 1] = '\0';
+        printf("SOURCE: %s\n", src);
 
         token = strtok(NULL, "->");
         if (token != NULL) {
-            strncpy(dest, token, sizeof(dest) - 1);
-            dest[sizeof(dest) - 1] = '\0';
+            strncpy(optional_card, token, sizeof(optional_card) - 1);
+            optional_card[sizeof(optional_card) - 1] = '\0';
+            printf("Card: %s\n", optional_card);
+
+
+            if (token[0] == 'C') {
+                strncpy(dest, optional_card, sizeof(dest) - 1);
+                dest[sizeof(dest) - 1] = '\0';
+                printf("DEST: %s\n", dest);
+                optional_card[0] = '\0';
+            } else {
+                token = strtok(NULL, "->");
+                if (token != NULL) {
+                    strncpy(dest, token, sizeof(dest) - 1);
+                    dest[sizeof(dest) - 1] = '\0';
+                    printf("DEST: %s\n", dest);
+                }
+            }
+        }
+    }
+    }
+    if (strlen(move_copy)==6){
+        char *token = strtok(move_copy, "->");
+        if (token != NULL) {
+            strncpy(src, token, sizeof(src) - 1);
+
+            printf("SOURCE: %s\n", src);
+            src[sizeof(src) - 1] = '\0';
+
+            token = strtok(NULL, "->");
+            if (token != NULL) {
+                strncpy(dest, token, sizeof(dest) - 1);
+                printf("DEST: %s\n", dest);
+                dest[sizeof(dest) - 1] = '\0';
+            }}}
+
+
+
+
+        if ((src[0]  == 'C') && ((dest[0])=='C')) {
+            int src_list_index = src[1] - '1';
+            CardNode *src_list = lists[src_list_index];
+            int dest_list_index = dest[1] - '1';
+            CardNode *dest_list = lists[dest_list_index];
+
+            CardNode *card_to_move = NULL;
+            CardNode *src_list_prev = NULL;
+            CardNode *dest_list_prev = NULL;
+            CardNode *dest_list_tail = dest_list;
+
+            if (src_list != NULL) {
+                while (src_list->next != NULL) {
+                    src_list_prev = src_list;
+                    src_list = src_list->next;
+                }
+                card_to_move = src_list;
+
+                if (dest_list != NULL) {
+                    while (dest_list->next != NULL) {
+                        dest_list_prev = dest_list;
+                        dest_list = dest_list->next;
+                    }}
+
+                if (isValidMove(card_to_move->card, dest_list->card)) {
+                    if (src_list_prev != NULL) {
+                        src_list_prev->next = NULL;
+                        if (!src_list_prev->visible) {
+                            src_list_prev->visible = true;
+                        }
+                        list_lengths[src_list_index]--;
+                    } else {
+                        lists[src_list_index] = NULL;
+                        list_lengths[src_list_index]--;
+                    }
+
+                    while (dest_list_tail->next != NULL) {
+                        dest_list_tail = dest_list_tail->next;
+                    }
+                    dest_list_tail->next = card_to_move;
+                    list_lengths[dest_list_index]++;
+
+                } else {
+                    printf("Invalid move.\n");
+                }
+            } else {
+                printf("Source list is empty.\n");
+            }
         }
 
+        int new_max_length = 0;
+        for (int i = 0; i < NUM_LISTS; i++) {
+            if (list_lengths[i] > new_max_length) {
+                new_max_length = list_lengths[i];
+            }
+        }
 
+        if (new_max_length != max_length) {
+            max_length = new_max_length;
+            printf("New max length is: %d\n", max_length);
+        } else {
+            printf("Max length unchanged: %d\n", max_length);
+        }
 
-        printf("src: %s\ndest: %s", src,dest);
+        printBoard(lists, list_lengths);
     }
-}
+
 
 
 
@@ -75,9 +207,11 @@ void playMove(const char* move){
 
 
 int main() {
-    playMove("C5:AS->C6");
-/*
+
+
     //initial print
+
+
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
     printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     printf("LAST COMMAND:\nMessage:\nINPUT > ");
@@ -109,13 +243,13 @@ int main() {
 
         else if (strcmp(phase,"PLAY")==0){
             printBoardPlayPhase();
-            /** TODO - PlayPhase game */
-      //  }
+
+        }
 
 
 
 
-  //  }
+    }
 
     return 0;
 }
@@ -134,6 +268,7 @@ int main() {
 int printBoardPlayPhase(){
     trimWhiteSpace(last_command);
     int j=1;
+    playMove(last_command);
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
 
     if (strcmp(last_command,"Q")==0){
@@ -535,8 +670,8 @@ void initialCardAppend(CardNode **list, const char *card, int visible_position) 
 }
 
 void printBoard(CardNode *lists[], int list_lengths[]) {
-    int max_length = 0;
-    int F_val=1;
+
+    int F_val = 1;
 
     for (int i = 0; i < NUM_LISTS; i++) {
         if (list_lengths[i] > max_length) {
@@ -546,7 +681,7 @@ void printBoard(CardNode *lists[], int list_lengths[]) {
 
     // Prints every row of the board one at a time. Prints F(1,2,3,4) depending on row
     // and skips the columns in rows where current = 0 (when list doesn't reach length of j)
-    for (int i = 0; i < max_length; i++) {
+    for (int i = 0; i <= max_length; i++) { // Updated condition
         for (int j = 0; j < NUM_LISTS; j++) {
             CardNode *current = lists[j];
             int k = 0;
@@ -557,32 +692,29 @@ void printBoard(CardNode *lists[], int list_lengths[]) {
 
             if (current != NULL) {
                 if (current->next == NULL) {
-                    current->visible;}
+                    current->visible;
+                }
                 if (current->visible) {
                     printf("%s\t", current->card);
                 } else {
                     printf("[]\t");
                 }
-                if (j==(NUM_LISTS-1) && i%2==0 && i<=6) {
-                    printf("\t[]\tF%d",F_val);
-                    F_val++;}
-
-
+                if (j == (NUM_LISTS - 1) && i % 2 == 0 && i <= 6) {
+                    printf("\t[]\tF%d", F_val);
+                    F_val++;
+                }
             } else {
                 printf(" \t");
             }
         }
         printf("\n");
-
     }
 }
 
 void playPhasePrintInitial(){
 
     // make initial lists with starting lengths
-    CardNode *lists[NUM_LISTS] ={};
-    int list_lengths[NUM_LISTS] = {1, 6, 7, 8, 9, 10, 11};
-    int list_positions[NUM_LISTS] = {0};
+
 
     int card_index = 0;
     int list_index = 0;
@@ -613,7 +745,7 @@ void playPhasePrintInitial(){
 
 
 
-/*Used to make sure, that the lists were set up correctly
+//Used to make sure, that the lists were set up correctly
 void print_list(CardNode *list) {
     CardNode *current = list;
     while (current != NULL) {
@@ -621,4 +753,4 @@ void print_list(CardNode *list) {
         current = current->next;
     }
     printf("NULL\n");
-}*/
+}
