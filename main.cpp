@@ -6,19 +6,36 @@
 #include <unistd.h>
 #define MAX_CARDS 52
 #define MAX_CARD_LENGTH 4
-int printEmptyBoard();
+#define NUM_LISTS 7
+
+
+
+
+typedef struct CardNode {
+    char card[MAX_CARD_LENGTH];
+    bool visible;
+    struct CardNode *next;
+} CardNode;
+
+
+
+void playPhasePrintInitial();
+void printBoard(CardNode *lists[], int list_lengths[]);
+int  printBoardPlayPhase();
 int printBoardStartupPhase();
 int loadFile(char[]);
 void shuffleCards(char cards[MAX_CARDS][MAX_CARD_LENGTH], char shuffled_cards[MAX_CARDS][MAX_CARD_LENGTH]);
 int saveDeck(char cards[MAX_CARDS][MAX_CARD_LENGTH], char filename[]);
-void trim_white_space(char *str);
+void trimWhiteSpace(char *str);
+void initialCardAppend(CardNode **list, const char *card, int visible_position);
+void printBoard(CardNode *lists[], int list_lengths[]);
+//void print_list(CardNode *list);
+
 bool game = true;
 bool loaded = false;
 char ok[3] = "OK";
 char msg[30] = "";
-
-
-
+char phase[] = "STARTUP";
 char cards[MAX_CARDS][MAX_CARD_LENGTH];
 char last_command[30];
 char command_1[4];
@@ -27,7 +44,18 @@ char command_2[25];
 
 
 
+
+
+
+
+
+
+
+
+
+
 int main() {
+
 
 
   //  char test123[]="KS";
@@ -59,6 +87,8 @@ int main() {
    // printf("%s",cards[51]);
   //  int result = strcmp(test123,cards[51]);
    // printf("%d\n",result);
+
+    //initial print
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
     printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     printf("LAST COMMAND:\nMessage:\nINPUT > ");
@@ -66,27 +96,32 @@ int main() {
 
         fgets(last_command, sizeof(last_command), stdin);
 
+
+        if (strcmp(phase,"STARTUP")==0){
             char *token = strtok(last_command, " ");
             strncpy(command_1, token, sizeof(command_1) - 1);
             command_1[sizeof(command_1) - 1] = '\0';
-            trim_white_space(command_1);
+            trimWhiteSpace(command_1);
             token = strtok(NULL, " ");
+
+
 
             if (token != NULL &&
                 (strcmp(command_1, "LD") == 0 || strcmp(command_1, "SI") == 0 || strcmp(command_1, "SD") == 0)) {
                 strncpy(command_2, token, sizeof(command_2) - 1);
                 command_2[sizeof(command_2) - 1] = '\0';
-                trim_white_space(command_2);
+                trimWhiteSpace(command_2);
             } else {
                 command_2[0] = '\0';
             }
 
-            if (strlen(command_2) > 0) {
-               // printf("Sentence 2: %s\n", command_2);
-               // if (strcmp(command_2, "test") == 0) { printf("correct string capture"); }
-               // else { printf("incorrect string!!!! %s", command_2); }
-            }
-            printBoardStartupPhase();
+
+            printBoardStartupPhase();}
+
+        else if (strcmp(phase,"PLAY")==0){
+            printBoardPlayPhase();
+            /** TODO - PlayPhase game */
+        }
 
 
 
@@ -107,7 +142,30 @@ int main() {
 
 
 
+int printBoardPlayPhase(){
+    trimWhiteSpace(last_command);
+    int j=1;
+    if (strcmp(last_command,"Q")==0){
 
+        strcpy(phase,"STARTUP");
+        printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
+        for (int i = 1; i < 9; i++) {
+            if (i % 2 != 0) {
+                printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
+                j++;
+            }
+            if (i % 2 == 0 && i < 8) {
+                printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\n");
+            }
+        }
+        printf("[]\t[]\t[]\n");
+    }
+    printf("\nLAST COMMAND: %s \nMessage: %s\nINPUT > ", last_command,msg);
+
+
+
+    return 0;
+}
 
 int printBoardStartupPhase() {
     strcpy(msg,"");
@@ -121,6 +179,18 @@ int printBoardStartupPhase() {
     int k = 0;
     //Always print top columns
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
+
+    if (strcmp(command_1, "P") == 0) {
+        if (!loaded) {
+            strcpy(msg, "Error - no file loaded");
+        }
+        else {
+            strcpy(phase,"PLAY");
+            strcpy(msg, ok);
+            playPhasePrintInitial();
+
+        }
+    }
 
     if (strcmp(command_1, "LD") == 0) {
         if (strcmp(command_2, "") == 0) {
@@ -344,6 +414,7 @@ int printBoardStartupPhase() {
 return 0;
 
 }
+
 int loadFile(char cardfile[]) {
     FILE *file = fopen(cardfile, "r");
 
@@ -438,7 +509,7 @@ fclose(file);
 return 0;
 }
 
-void trim_white_space(char *str) {
+void trimWhiteSpace(char *str) {
     int last_non_space = -1;
     for (int i = 0; str[i]; ++i) {
         if (!isspace((unsigned char)str[i])) {
@@ -449,3 +520,110 @@ void trim_white_space(char *str) {
         str[last_non_space + 1] = '\0';
     }
 }
+
+// Adds cards to lists when play-phase initially starts
+// visible_position is used to set initial visibility, since we know which cards will be visible at the start.
+void initialCardAppend(CardNode **list, const char *card, int visible_position) {
+    CardNode *new_node = (CardNode *)malloc(sizeof(CardNode));
+    strcpy(new_node->card, card);
+    new_node->next = NULL;
+    new_node->visible = visible_position;
+
+    //Choosing where to put cardnode. Will place new_node as latest part of ->
+    // -> list (or first & last if list is empty).
+    if (*list == NULL) {
+        *list = new_node;
+    } else {
+        CardNode *current = *list;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
+}
+
+void printBoard(CardNode *lists[], int list_lengths[]) {
+    int max_length = 0;
+    int F_val=1;
+
+    for (int i = 0; i < NUM_LISTS; i++) {
+        if (list_lengths[i] > max_length) {
+            max_length = list_lengths[i];
+        }
+    }
+
+    // Prints every row of the board one at a time. Prints F(1,2,3,4) depending on row
+    // and skips the columns in rows where current = 0 (when list doesn't reach length of j)
+    for (int i = 0; i < max_length; i++) {
+        for (int j = 0; j < NUM_LISTS; j++) {
+            CardNode *current = lists[j];
+            int k = 0;
+            while (current != NULL && k < i) {
+                current = current->next;
+                k++;
+            }
+
+            if (current != NULL) {
+                if (current->visible) {
+                    printf("%s\t", current->card);
+                } else {
+                    printf("[]\t");
+                }
+                if (j==(NUM_LISTS-1) && i%2==0 && i<=6) {
+                    printf("\t[]\tF%d",F_val);
+                    F_val++;}
+
+
+            } else {
+                printf(" \t");
+            }
+        }
+        printf("\n");
+
+    }
+}
+
+void playPhasePrintInitial(){
+
+    // make initial lists with starting lengths
+    CardNode *lists[NUM_LISTS] ={};
+    int list_lengths[NUM_LISTS] = {1, 6, 7, 8, 9, 10, 11};
+    int list_positions[NUM_LISTS] = {0};
+
+    int card_index = 0;
+    int list_index = 0;
+
+    // Placing cards from startup-array into the lists. visibility depending on placement and position
+    // depending on the card's place in the startup array.
+    while (card_index < MAX_CARDS) {
+        if (list_positions[list_index] < list_lengths[list_index]) {
+            int visible_position = list_positions[list_index] >= list_index;
+            initialCardAppend(&lists[list_index], cards[card_index], visible_position);
+
+            list_positions[list_index]++;
+            card_index++;
+        }
+        list_index = (list_index + 1) % NUM_LISTS;
+    }
+
+    /* for (int i = 0; i < NUM_LISTS; i++) {
+         printf("List %d: ", i + 1);
+         print_list(lists[i]);
+     }*/
+
+    printBoard(lists, list_lengths);
+
+}
+
+
+
+
+/*Used to make sure, that the lists were set up correctly
+void print_list(CardNode *list) {
+    CardNode *current = list;
+    while (current != NULL) {
+        printf("%s -> ", current->card);
+        current = current->next;
+    }
+    printf("NULL\n");
+}*/
