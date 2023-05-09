@@ -46,7 +46,27 @@ char command_2[25];
 
 
 
+void playMove(const char* move){
+    char src[6], dest[3];
+    char move_copy[strlen(move) + 1]; // Create a copy of the move string to avoid modifying the original string
+    strcpy(move_copy, move);
 
+    char *token = strtok(move_copy, "->");
+    if (token != NULL) {
+        strncpy(src, token, sizeof(src) - 1);
+        src[sizeof(src) - 1] = '\0';
+
+        token = strtok(NULL, "->");
+        if (token != NULL) {
+            strncpy(dest, token, sizeof(dest) - 1);
+            dest[sizeof(dest) - 1] = '\0';
+        }
+
+
+
+        printf("src: %s\ndest: %s", src,dest);
+    }
+}
 
 
 
@@ -55,39 +75,8 @@ char command_2[25];
 
 
 int main() {
-
-
-
-  //  char test123[]="KS";
-   /* FILE *file = fopen("cards.txt", "r");
-    if (file == NULL) {
-        printf("Error opening file.\n");
-        return 1;
-    }
-
-
-    int i = 0;
-
-    while (fgets(cards[i], MAX_CARD_LENGTH, file) != NULL && i < MAX_CARDS) {
-        // Remove newline character if present
-        size_t len = strlen(cards[i]);
-        if (cards[i][len-1] == '\n') {
-            cards[i][len-1] = '\0';
-        }
-
-        i++;
-    }*/
-
-   // fclose(file);
-
-    // Print the array to check the result
-  //  for (int j = 0; j < i; j++) {
-  //      printf("%s\n", cards[j]);
- //   }
-   // printf("%s",cards[51]);
-  //  int result = strcmp(test123,cards[51]);
-   // printf("%d\n",result);
-
+    playMove("C5:AS->C6");
+/*
     //initial print
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
     printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
@@ -121,12 +110,12 @@ int main() {
         else if (strcmp(phase,"PLAY")==0){
             printBoardPlayPhase();
             /** TODO - PlayPhase game */
-        }
+      //  }
 
 
 
 
-    }
+  //  }
 
     return 0;
 }
@@ -145,10 +134,11 @@ int main() {
 int printBoardPlayPhase(){
     trimWhiteSpace(last_command);
     int j=1;
-    if (strcmp(last_command,"Q")==0){
+    printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
 
+    if (strcmp(last_command,"Q")==0){
         strcpy(phase,"STARTUP");
-        printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n");
+
         for (int i = 1; i < 9; i++) {
             if (i % 2 != 0) {
                 printf("[]\t[]\t[]\t[]\t[]\t[]\t[]\t\t[]\tF%d\n", j);
@@ -160,6 +150,8 @@ int printBoardPlayPhase(){
         }
         printf("[]\t[]\t[]\n");
     }
+
+
     printf("\nLAST COMMAND: %s \nMessage: %s\nINPUT > ", last_command,msg);
 
 
@@ -564,6 +556,8 @@ void printBoard(CardNode *lists[], int list_lengths[]) {
             }
 
             if (current != NULL) {
+                if (current->next == NULL) {
+                    current->visible;}
                 if (current->visible) {
                     printf("%s\t", current->card);
                 } else {
@@ -614,6 +608,7 @@ void playPhasePrintInitial(){
     printBoard(lists, list_lengths);
 
 }
+
 
 
 
