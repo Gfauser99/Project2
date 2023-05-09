@@ -75,9 +75,26 @@ void playMove(const char* move){
 
 
 int main() {
-    playMove("C5:AS->C6");
-/*
+    //playMove("C5:AS->C6");
+
     //initial print
+    printf("\n---\t--\t---INSTRUCTIONS---\t--\t---\n"
+           "|\t\t\t\t\t\t  |\n"
+           "|   LD -> LOADS A NEW DECK. \t\t\t  |\n"
+           "|   SW -> SHOWS ALL CARDS IN THE DECK. \t\t  |\n"
+           "|          ^(this works Only in 'P', \t\t  |\n"
+           "|   SR -> SHUFFLES YOUR DECK.  \t\t\t  |\n"
+           "|    P -> TURNING ON PLAY MODES. \t\t  |\n"
+           "|           ^example on move possibilities: \t  |\n"
+           "|              -> 'C1:AH->C2'  \t\t\t  |\n"
+           "|              -> 'C1->C7'  \t\t\t  |\n"
+           "|              -> 'C2->F1'  \t\t\t  |\n"
+           "|              -> 'F3->C6'  \t\t\t  |\n"
+           "|    Q -> TURNING OFF PLAY MODES. \t\t  |\n"
+           "|   QQ -> QUITS GAME \t\t\t\t  |\n"
+           "|\t\t\t\t\t\t  |\n"
+           "---\t--\t---INSTRUCTIONS---\t--\t---\n");
+
     printf("\nC1 \tC2 \tC3 \tC4 \tC5 \tC6 \tC7 \t\n\n" );
     printf("\t\t\t\t\t\t\t\t[]\tF1\n\n\t\t\t\t\t\t\t\t[]\tF2\n\n\t\t\t\t\t\t\t\t[]\tF3\n\n\t\t\t\t\t\t\t\t[]\tF4\n");
     printf("LAST COMMAND:\nMessage:\nINPUT > ");
@@ -110,12 +127,12 @@ int main() {
         else if (strcmp(phase,"PLAY")==0){
             printBoardPlayPhase();
             /** TODO - PlayPhase game */
-      //  }
+        }
 
 
 
 
-  //  }
+    }
 
     return 0;
 }
