@@ -92,6 +92,7 @@ int main() {
            "|              -> 'F3->C6'  \t\t\t  |\n"
            "|    Q -> TURNING OFF PLAY MODES. \t\t  |\n"
            "|   QQ -> QUITS GAME \t\t\t\t  |\n"
+           "|          ^(this works Only after using 'Q', \t\t  |\n"
            "|\t\t\t\t\t\t  |\n"
            "---\t--\t---INSTRUCTIONS---\t--\t---\n");
 
